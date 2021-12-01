@@ -38,3 +38,6 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 .Rproj.user
+
+# My notes
+RWH_private_notes.txt

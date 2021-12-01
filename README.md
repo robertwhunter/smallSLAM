@@ -1,4 +1,7 @@
 # smallSLAM
+
+## Introduction 
+
 smallSLAM is an analysis pipeline for small RNA SLAMseq data.  
 
 [SLAMseq](https://www.nature.com/articles/nmeth.4435) is a method for detecting metabolic labelling in RNA.  4-thiouridine is used to label RNA and then RNA is treated with an alkylating agent (iodoacetamide).  During the reverse transcriptase step of RNA library preparation, bulky alkyl groups interfere with Watson-Crick base-pairing so that sites of 4TU incorporation are marked by T>C conversions in the final RNAseq dataset.  
@@ -10,5 +13,8 @@ The smallSLAM pipeline has been designed to quantify and map T>C conversions in 
 Our general approach is shown here:
 
 ![](smallSLAM.png)
+
+
+## Implementation
 
 We will add additional documentation in late 2021.  
