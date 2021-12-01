@@ -11,4 +11,4 @@ Our general approach is shown here:
 
 ![](smallSLAM.png)
 
-We will add additional documentation in mid-late 2021.  
+We will add additional documentation in late 2021.  
