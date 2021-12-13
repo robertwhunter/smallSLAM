@@ -18,3 +18,19 @@ Our general approach is shown here:
 ## Implementation
 
 We will add additional documentation in late 2021.  
+
+
+## Set-up
+
+### Genome data
+
+Need to set up a directory with reference genomes.  To do this: in .fasta format.  These then need to be:  
+
+1) download genome sequences in .fasta format (or use `smallSLAM_pullgenomes.sh` script to do this)
+2) generate Bowtie index files (.bt2) (use `smallSLAM_indexgenomes.sh` script) 
+3) used to generate a lookup table (`Lookup_table.tsv`) so that gene names can be translated into intuitive ones (use `smallSLAM_makelookup.sh` script)
+
+Ensure correct adapter sequences being used for the script.  
+
+### Input data
+Input data in .fastq format.  
