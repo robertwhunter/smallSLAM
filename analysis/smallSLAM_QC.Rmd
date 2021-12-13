@@ -1,0 +1,775 @@
+---
+params:
+  fname: "2b_reanalysis"
+  lib_data_dir: "201117_invitro_CM_cut"
+  lib_data_type: "pCM"
+  sequencing_run: 1
+  include_TABACO: FALSE
+  include_TREFOIL: FALSE
+
+title: "`r paste0('smallSLAM analysis - ', params$fname)`"
+author: "RWH"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+
+output: 
+  html_document:
+    theme: readable 
+    highlight: pygments 
+    anchor_sections: FALSE
+  
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE, 
+  warning = FALSE, 
+  error = TRUE, 
+  message = FALSE,
+  fig.path = paste0("Figures/", params$fname, "/")
+  )
+
+#### SET THRESHOLDS
+threshold_nT <- 1000
+threshold_cpm <- 10
+threshold_cR_centile <- 0.99
+
+#### LOAD LIB DATA & ANALYSIS SCRIPTS
+dir_setup_scripts <- "~/OneDrive - University of Edinburgh/R files/Labdata - RNAseq/Scripts_smallSLAM/"
+source(paste0(dir_setup_scripts, "0a_analysis_setup_start.R"))
+source(paste0(dir_setup_scripts, "0b_analysis_setup_finish.R"))
+source(paste0(dir_setup_scripts, "0d_parse_smallSLAM.R"))
+
+```
+
+
+# Basic data characterisation
+
+## Libraries and metadata  
+
+```{r metadata}
+
+if (params$sequencing_run == 1) {
+  df_meta_libs %>% 
+    select(libnum,
+           sample_type,
+           `4sU`,
+           IAA,
+           group,
+           shortname,
+           `raw reads` = reads_total) -> t1
+}
+
+if (params$sequencing_run == 2) {
+  df_meta_libs %>% 
+    select(shortname,
+           sex,
+           age,
+           sample_type,
+           cre,
+           `4TU` = X4TU,
+           group,
+           `raw reads` = reads) -> t1
+}
+
+t1 %>% 
+  select(-`raw reads`) %>% 
+  arrange(as.character(shortname)) %>% knitr::kable()
+
+```
+
+<br>
+<br>
+
+## Library size & read-length distribution
+
+```{r QC_reads}
+lib_data$QC_json_fn %>% 
+  QCget_readcounts() %>% 
+  QCplot_readcounts(df_meta_short) + sf_RWH3
+
+```
+
+
+```{r QC_length_hist}
+lib_data$QC_json_fn %>% 
+  QCget_length_distribution() %>% 
+  QCreshape_length_distribution() %>% 
+  QCplot_length_distribution_hist(df_meta_short) + sf_RWH3
+
+```
+
+```{r QC_length_hist_trim}
+lib_data$QC_json_fn %>% 
+  QCget_length_distribution() %>% 
+  QCreshape_length_distribution() %>% 
+  QCplot_length_distribution_hist_trim(df_meta_short) + sf_RWH3
+
+```
+
+The binwidth of 2 is an artefact of fastQC.  Here are true read-lenghts for first library:  
+
+```{r check_length}
+df_u_sample <- lib_data$Unique_fn[[1]] %>% read_csv()
+df_u_sample <- df_u_sample %>% mutate(length = nchar(sequence))
+df_u_sample %>% 
+  group_by(length) %>% 
+  summarise(reads = sum(count)) %>% 
+  ggplot(aes(x = length, y = reads)) +
+  geom_col(fill = "blue", alpha = 0.6) +
+  scale_x_continuous(limits = c(16, 30), breaks = 16:30) +
+  ggtitle(str_replace(lib_data$Unique_fn[[1]], dir_data_full, "")) +
+  theme_RWH_horizontal() +
+  theme(plot.title = element_text(size = 8))
+
+```
+
+
+<br>
+<br>
+
+# Re-analysis
+
+## Analyses by gene
+
+First, collapse sequences that map to the same gene.  How does dataset look after this?  
+
+```{r composition_after_collapse}
+
+df_parents_gene %>% 
+  group_by(lib, biotype) %>% 
+  count() %>% 
+  pivot_wider(
+    names_from = lib,
+    values_from = n
+  ) %>% 
+  knitr::kable()
+
+df_parents %>% 
+  select(sequence, contains("family_cpm_")) %>% 
+  pivot_longer(
+    cols = contains("family_cpm_"),
+    names_to = "lib",
+    names_prefix = "family_cpm_",
+    values_to = "family_cpm"
+  ) %>% 
+  group_by(lib) %>% 
+  summarise(
+    no_parents = sum(family_cpm > 0, na.rm = TRUE)
+  ) -> t1
+
+df_parents_gene %>% 
+  group_by(lib) %>% 
+  summarise(
+    no_genes = length(gene)
+  ) -> t2
+
+t1 %>% 
+  left_join(t2) %>% 
+  mutate(
+    `sequences per gene` = (no_parents / no_genes) %>% round(2) %>% format(nsmall = 2, justify = "right")
+    ) %>% 
+  knitr::kable(align = c("l", "r", "r", "r"))
+
+
+df_parents_gene %>%
+  group_by(lib, biotype) %>% 
+  summarise(
+    no_genes = length(gene),
+    no_parents = mean(no_parent_sequences_from_parents),
+    cum_cpm = sum(readsCPM),
+    cpm_per_gene = cum_cpm/length(gene)
+  ) %>% 
+  pivot_wider(
+    names_from = lib,
+    values_from = c(no_genes, no_parents, cum_cpm, cpm_per_gene),
+    values_fill = list(no_genes = 0, no_parents = 0, cum_cpm = 0, cpm_per_gene = 0)
+  ) %>% 
+  rowwise() %>% 
+  mutate(
+    `genes (per lib)` = CI_95(c_across(contains("no_genes")), digits = 1),
+    `parent sequences (per gene)` = CI_95(c_across(contains("no_parents")), digits = 1),
+    `cumulative cpm` = CI_95(c_across(contains("cum_cpm")), digits = 0),
+    `cpm per gene` = CI_95(c_across(contains("cpm_per_gene")), digits = 0)
+  ) %>% 
+  select(
+    biotype, 
+    `genes (per lib)`, 
+    `parent sequences (per gene)`, 
+    `cumulative cpm`, 
+    `cpm per gene`
+  ) %>% 
+  knitr::kable()
+
+df_parents_gene %>% 
+  ggplot(aes(x = readsCPM, y = biotype)) +
+  geom_density_ridges() +
+  scale_x_log10() +
+  theme_RWH()
+
+df_parents_gene %>% 
+  ggplot(aes(x = no_parent_sequences_from_parents, y = biotype)) +
+  geom_density_ridges() +
+  scale_x_log10() +
+  theme_RWH()
+
+```
+<br>
+<br>
+
+## Biotypes
+
+```{r biotypes}
+
+df_tcounts %>% 
+  plot_biotypes_new() + sf_RWH2
+
+```
+
+
+```{r write_out}
+
+df_tcounts %>% write_csv(paste0(dir_data, params$lib_data_dir, "_tcounts_SMALL.csv"))
+
+```
+
+
+## Conversion rates vs theta
+
+Generate `conversion rates` and compare to my `theta`:  
+
+```{r write_out_genelist}
+
+get_gene_name_from_pctranscript <- function(x) {
+  if (substr(x, 1, 4) == ">ENS") {
+  x2 <- stringr::str_split(x, fixed("|"))
+  x3 <- x2[[1]][6]
+  return(x3)} else {
+  return(x)
+  }
+}
+
+df_combined %>% 
+  rowwise() %>% 
+  mutate(
+    gene_name = get_gene_name_from_pctranscript(gene)
+  ) %>% 
+  select(-gene) %>% 
+  rename(gene = gene_name) %>% 
+  relocate(lib, gene) -> df_combined
+
+df_combined %>% 
+  group_by(gene) %>% 
+  summarise(
+    biotype = biotype[1],
+    mean_cpm = mean(gene_cpm)
+  ) -> df_genes_out
+
+df_genes_out %>% write_csv(paste0(hits_dir, params$lib_data_dir, "_gene_list.csv"))
+
+```
+
+
+```{r theta_vs_conversion_rates}
+
+plot_xy <- function(p) {
+  p +
+  geom_point(alpha = 0.1) +
+  scale_x_log10() +
+  scale_y_log10() +
+  theme_RWH()
+}
+
+plot_summarise <- function(p) {
+  p + geom_smooth(se = FALSE)
+}
+
+plot_compare <- function(p) {
+  p +
+  coord_fixed() +
+  geom_abline(slope = 1, intercept = 0, colour = "red", size = 0.5, linetype = 2)
+}
+
+df_combined %>% 
+  filter(gene_cpm > 10) %>% 
+  ggplot(aes(x = gene_cpm, y = coverage_on_Ts, colour = group)) %>% 
+  plot_xy() %>% 
+  plot_summarise()
+
+df_combined %>% 
+  ggplot(aes(x = gene_theta, y = rate_conversions)) %>% 
+  plot_xy() %>% 
+  plot_compare() 
+
+df_combined %>% 
+  ggplot(aes(x = gene_theta, y = rate_conversions, colour = group)) %>% 
+  plot_xy() %>% 
+  plot_compare() +
+  facet_wrap(~biotype)
+
+# df_combined %>% 
+#   mutate(`theta / cR ratio` = gene_theta/rate_conversions) %>% 
+#   ggplot(aes(x = coverage_on_Ts, y = `theta / cR ratio`)) %>% 
+#   plot_xy() %>% 
+#   plot_summarise() + facet_wrap(~group)
+# 
+# df_combined %>% 
+#   mutate(`theta / cR ratio` = gene_theta/rate_conversions) %>% 
+#   ggplot(aes(x = no_parent_sequences_tcounts, y = `theta / cR ratio`)) %>% 
+#   plot_xy() %>% 
+#   plot_summarise() + facet_wrap(~group)
+# 
+# df_combined %>% 
+#   mutate(`theta / cR ratio` = gene_theta/rate_conversions) %>% 
+#   ggplot(aes(x = rate_conversions, y = `theta / cR ratio`)) %>% 
+#   plot_xy() %>% 
+#   plot_summarise() + facet_wrap(~group)
+
+df_combined %>% 
+  ggplot(aes(x = no_parent_sequences_from_parents, y = no_parent_sequences_tcounts)) %>% 
+  plot_xy() %>% 
+  plot_compare()
+
+```
+
+
+<br>
+<br>
+
+## Gene expression: PCA
+
+Gene expression (i.e. cpm):
+
+```{r cpm_pca}
+
+df_combined %>% 
+  select(sample_name = lib, gene, gene_cpm) %>% 
+  pivot_wider(
+    names_from = sample_name,
+    values_from = gene_cpm) %>% 
+  NA_sub_zero() -> df_tcounts_for_pca
+
+df_meta_libs %>% 
+  select(sample_name = shortname, group) -> df_meta_for_pca
+
+dendrogram_RWH(df_tcounts_for_pca, df_meta_for_pca) + sc_RWH3
+PCA_RWH(df_tcounts_for_pca, df_meta_for_pca) + sc_RWH3  
+
+```
+
+<br>
+<br>
+
+## Conversion rates: PCA
+
+Conversion rate where coverage on Ts > `r threshold_nT`:
+
+```{r TC_PCA}
+
+df_combined %>% 
+  filter(coverage_on_Ts > threshold_nT) %>% 
+  select(sample_name = lib, gene, rate_conversions) %>% 
+  pivot_wider(
+    names_from = sample_name,
+    values_from = rate_conversions) %>% 
+  NA_sub_zero() -> df_tcounts_for_pca
+
+df_meta_libs %>% 
+  select(sample_name = shortname, group) -> df_meta_for_pca
+
+dendrogram_RWH(df_tcounts_for_pca, df_meta_for_pca) + sc_RWH3
+PCA_RWH(df_tcounts_for_pca, df_meta_for_pca) + sc_RWH3  
+
+```
+
+<br>
+<br>
+
+## Mutation rates:
+
+```{r TABACO}
+
+lib_data$TABACO_fn %>% read_in_TABACO() %>% 
+  left_join(df_meta_short, by = c("sample" = "shortname")) %>% 
+  plot_TABACO_grid()
+
+```
+
+<br>
+<br>
+
+## T>C conversion rates:
+
+```{r conversion_rates_plots}
+
+df_combined %>% 
+  ggplot(aes(x = coverage_on_Ts, y = rate_conversions, colour = group)) +
+    geom_point(alpha = 0.1) +
+    scale_x_log10() +
+    theme_RWH()
+
+df_combined %>% 
+  ggplot(aes(x = coverage_on_Ts, y = rate_conversions, colour = group)) +
+    geom_smooth() +
+    geom_vline(xintercept = threshold_nT, colour = "Red", size = 0.5, linetype = 2) +
+    scale_x_log10() +
+    theme_RWH()
+
+df_combined %>% 
+  ggplot(aes(x = gene_cpm, y = rate_conversions, colour = group)) +
+    geom_smooth() +
+    geom_vline(xintercept = threshold_cpm, colour = "Red", size = 0.5, linetype = 2) +
+    scale_x_log10() +
+    theme_RWH()
+
+```
+
+
+So can now split genes into low- and high-confidence groups (by coverage on Ts):
+
+```{r conversion_rates_plots_confidence}
+
+df_combined %>% 
+  mutate(
+    confidence = case_when(
+      coverage_on_Ts >= threshold_nT ~ "high",
+      coverage_on_Ts < threshold_nT ~ "low"
+    )
+  ) -> df_combined
+
+df_combined %>% 
+  mutate(rate_conversions = rate_conversions + 1e-6) %>% 
+  ggplot(aes(x = rate_conversions, y = lib, fill = group)) +
+  geom_density_ridges(alpha = 0.3) +
+  scale_x_log10() +
+  facet_wrap(~confidence) +
+  theme_RWH()
+
+df_combined %>% 
+  mutate(rate_conversions = rate_conversions + 1e-6) %>% 
+  ggplot(aes(x = rate_conversions, y = 1, colour = group)) +
+  geom_density_ridges(alpha = 0) +
+  scale_x_log10() +
+  facet_wrap(~confidence) +
+  theme_RWH()
+
+```
+
+<br>
+<br>
+
+```{r conversion_rates_plot_abundance}
+
+df_combined %>% 
+  filter(gene_cpm < threshold_cpm) %>% 
+  filter(group == "4TUneg") %>% 
+  select(rate_conversions) -> baseline_cRs
+
+baseline_cRs$rate_conversions %>% 
+  quantile(threshold_cR_centile) -> threshold_hit_cR
+
+df_combined %>% 
+  mutate(
+    abundance = case_when(
+      gene_cpm >= threshold_cpm ~ "high",
+      gene_cpm < threshold_cpm ~ "low"
+    ),  
+    labelled = case_when(
+      rate_conversions > 0 ~ TRUE,
+      rate_conversions == 0 ~ FALSE),
+    hit = case_when(
+      rate_conversions >= threshold_hit_cR ~ "hit",
+      rate_conversions < threshold_hit_cR ~ "not"
+    )
+  ) -> df_combined
+
+df_combined %>% 
+  ggplot(aes(x = group, y = rate_conversions, color = hit)) +
+  geom_jitter(width = 0.2, alpha = 0.1) +
+  geom_hline(yintercept = threshold_hit_cR, color = "red", size = 0.5, linetype = 2) +
+  scale_y_log10() +
+  facet_wrap(~abundance) +
+  theme_RWH() + sc_RWH_highlights
+
+df_combined %>% 
+  group_by(group, abundance, hit) %>% 
+  arrange(hit, group, abundance) %>% 
+  count() %>% 
+    pivot_wider(names_from = hit, values_from = n) %>% 
+    mutate(perC = hit/(not+hit) * 100) %>% 
+  arrange(abundance, group) %>% 
+  knitr::kable(digits = 2)
+
+# df_combined %>% 
+#   filter(abundance == "low", hit == "hit") %>% 
+#   select(lib, group, gene, biotype) %>% 
+#   arrange(group, biotype, gene_name, lib) %>% 
+#   knitr::kable()
+
+df_combined %>% 
+  plot_biotypes_new_hits() 
+
+
+
+```
+
+
+## Compare negative and positive libraries
+
+```{r plot_neg_vs_pos_notpaired, eval=!paired_libraries}
+
+df_combined %>% 
+  group_by(group, gene, confidence) %>% 
+  summarise(
+   mean_conversions = mean(rate_conversions, na.rm = FALSE)
+  ) %>% 
+  pivot_wider(
+    names_from = group,
+    values_from = mean_conversions) %>% 
+  drop_na() %>% ggplot(aes(x = creneg, y = pos)) +
+  geom_point(alpha = 0.1) +
+  geom_abline(slope = 1, intercept = 0) +
+  coord_fixed() +
+  facet_wrap(~confidence) +
+  theme_RWH()
+
+```
+
+```{r plot_neg_vs_pos_paired, eval=paired_libraries}
+
+df_combined %>% 
+  filter(coverage_on_Ts > threshold_nT) %>% 
+  group_by(group, gene) %>% 
+  summarise(
+   mean_conversions = mean(rate_conversions, na.rm = FALSE) 
+  ) %>% 
+  pivot_wider(
+    names_from = group,
+    values_from = mean_conversions) %>% 
+  drop_na() %>% ggplot(aes(x = neither, y = both)) +
+  geom_point(alpha = 0.3) +
+  geom_abline(slope = 1, intercept = 0) +
+  coord_fixed() +
+  theme_RWH()
+
+```
+
+## Looking for labelled reads
+
+
+```{r look_for_unlabelled_reads, eval=!paired_libraries}
+
+df_combined %>% 
+  group_by(lib, labelled, abundance) %>% 
+  count() %>% 
+  pivot_wider(
+    names_from = labelled,
+    names_prefix = "labelled_",
+    values_from = n
+  ) %>% 
+  mutate(
+    `labelled (%)` = `labelled_TRUE`/(`labelled_TRUE` + `labelled_FALSE`) * 100
+  ) %>% 
+  left_join(df_meta_short, by = c("lib" = "shortname")) %>% 
+  arrange(abundance, group, lib) %>% 
+  knitr::kable(digits = 1)
+
+df_combined %>% 
+  group_by(group, gene, abundance) %>% 
+  summarise(
+    n_labelled = sum(labelled == TRUE)
+  ) %>% 
+ pivot_wider(
+   names_from = group,
+   values_from = n_labelled
+ ) %>%
+  NA_sub_zero() %>% 
+  mutate(
+    control = creneg, # + `4TUneg`,
+    labelled_in = case_when(
+      pos > 0 & control == 0 ~ "crepos libraries",
+      pos == 0 & control == 0 ~ "no libraries",
+      pos == 0 & control > 0 ~ "control libraries",
+      pos > 0 & control > 0 ~ "all libraries")
+    ) -> df_hits
+
+df_hits %>% 
+  group_by(labelled_in, abundance) %>% 
+  count() %>% 
+  arrange(abundance, labelled_in) %>% 
+  knitr::kable()
+
+# df_hits %>% 
+#   filter(labelled_in == "crepos libraries") %>% 
+#   knitr::kable()
+
+```
+
+```{r look_for_unlabelled_reads_paired, eval=paired_libraries}
+
+df_combined %>% 
+  mutate(
+    labelled = case_when(
+      rate_conversions > 0 ~ TRUE,
+      rate_conversions == 0 ~ FALSE
+    )
+  ) -> df_combined
+
+df_combined %>% 
+  group_by(lib, labelled, confidence) %>% 
+  count() %>% 
+  pivot_wider(
+    names_from = labelled,
+    names_prefix = "labelled_",
+    values_from = n
+  ) %>% 
+  mutate(
+    `labelled (%)` = `labelled_TRUE`/(`labelled_TRUE` + `labelled_FALSE`) * 100
+  ) %>% 
+  left_join(df_meta_short, by = c("lib" = "shortname")) %>% 
+  arrange(confidence, group, lib) %>% 
+  knitr::kable(digits = 1)
+
+df_combined %>% 
+  group_by(group, gene, confidence) %>% 
+  summarise(
+    n_labelled = sum(labelled == TRUE)
+  ) %>% 
+ pivot_wider(
+   names_from = group,
+   values_from = n_labelled
+ ) %>%
+  NA_sub_zero() %>% 
+  mutate(
+    pos = cell_pos,
+    control = cell_neg + naive + IAAneg,
+    labelled_in = case_when(
+      pos > 0 & control == 0 ~ "crepos libraries",
+      pos == 0 & control == 0 ~ "no libraries",
+      pos == 0 & control > 0 ~ "control libraries",
+      pos > 0 & control > 0 ~ "all libraries")
+    ) -> df_hits
+
+df_hits %>% 
+  group_by(labelled_in, confidence) %>% 
+  count() %>% 
+  arrange(confidence, labelled_in) %>% 
+  knitr::kable()
+
+df_hits %>% 
+  filter(labelled_in == "crepos libraries" & confidence == "high") %>% 
+  knitr::kable()
+
+```
+
+Reference genes analysis:
+
+```{r ref_genes, eval=!paired_libraries}
+
+df_ref_miRNA %>% 
+  filter(dataset_Boerries == TRUE) %>% 
+  mutate(
+    gene = paste0("Mus musculus (house mouse) mmu-", gene) %>% gsub("mir", "miR", .)
+  ) %>% 
+  select(gene) -> plot_genes
+
+df_combined %>% 
+  filter(gene %in% plot_genes$gene) -> df_GOI
+
+df_GOI %>% 
+  select(lib, gene, group, rate_conversions) %>% 
+  group_by(gene, group) %>% 
+  summarise(
+    mean_cR = mean(rate_conversions)
+  ) %>% 
+  pivot_wider(
+    names_from = group, 
+    values_from = mean_cR) %>% 
+  NA_sub_zero() %>% 
+    ggplot(aes(x = creneg, y = pos)) +
+    geom_text(aes(label = gsub("Mus musculus (house mouse) mmu-", "", gene, fixed = TRUE)), 
+              hjust = -0.1, vjust = -0.1, size = 2) +
+    theme_RWH() -> p
+
+p %>% plot_xy() %>%  plot_compare()
+
+```
+
+```{r finding_pCM_genes_in_rpTECs, eval = FALSE}
+
+df_pCM <- read_csv(paste0(hits_dir, "201117_invitro_CM_cut_gene_list.csv"))
+
+df_combined %>% 
+  filter(group != "IAAneg") %>% 
+  select(lib, gene, gene_cpm) %>% 
+  pivot_wider(
+    names_from = lib,
+    values_from = gene_cpm,
+    values_fill = list(gene_cpm = 0)
+  ) %>% 
+  rowwise() %>% 
+  mutate(
+    sum_naive = sum(c_across(lib_naive$shortname)),
+    sum_other = sum(c_across(where(is.numeric))) - sum_naive,
+    total_libs = sum(c_across(where(is.numeric))>0)
+  ) %>% 
+  filter(sum_naive == 0) %>% 
+  select(gene, sum_other, total_libs) -> df_transferred_putative
+
+df_pCM %>% 
+  rename(mean_cpm_pCM = mean_cpm) %>% 
+  full_join(df_genes_out) %>% 
+  full_join(df_transferred_putative) %>% 
+  mutate(
+    hit = case_when(
+      is.na(total_libs) ~ FALSE,
+      !is.na(total_libs) ~ TRUE)) %>% 
+  ggplot(aes(x = mean_cpm, y = mean_cpm_pCM, colour = hit, size = hit, alpha = hit)) +
+  geom_point() +
+  scale_x_log10() +
+  scale_y_log10() +
+  ggtitle("hits") +
+  theme_RWH() 
+
+
+df_combined %>% 
+  filter(group != "IAAneg") %>% 
+  filter(group != "naive") ->
+  df_combined_short
+
+df_combined_short$lib %>% as.factor() %>% levels() %>% sample(3) -> lib_random
+
+df_combined %>% 
+  filter(group != "IAAneg") %>% 
+  select(lib, gene, gene_cpm) %>% 
+  pivot_wider(
+    names_from = lib,
+    values_from = gene_cpm,
+    values_fill = list(gene_cpm = 0)
+  ) %>% 
+  rowwise() %>% 
+  mutate(
+    sum_random = sum(c_across(all_of(lib_random))),
+    sum_other = sum(c_across(where(is.numeric))) - sum_random,
+    total_libs = sum(c_across(where(is.numeric))>0)
+  ) %>% 
+  filter(sum_random == 0) %>% 
+  select(gene, sum_other, total_libs) -> df_transferred_putative_random
+  
+df_pCM %>% 
+  rename(mean_cpm_pCM = mean_cpm) %>% 
+  full_join(df_genes_out) %>% 
+  full_join(df_transferred_putative_random) %>% 
+  mutate(
+    hit = case_when(
+      is.na(total_libs) ~ FALSE,
+      !is.na(total_libs) ~ TRUE)) %>% 
+  ggplot(aes(x = mean_cpm, y = mean_cpm_pCM, colour = hit, size = hit, alpha = hit)) +
+  geom_point() +
+  scale_x_log10() +
+  scale_y_log10() +
+  ggtitle("hits_random") +
+  theme_RWH() 
+
+```
+
