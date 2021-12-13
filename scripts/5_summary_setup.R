@@ -49,7 +49,10 @@ merge_mapping <- function(
   df_map <- df_map %>% select(sequence, biotype, gene)
   df_counts <- left_join(df_counts, df_map, by = c("sequence"))
 
-  write.csv(df_counts, file=sub(pattern=".fastq.trim.uniq_slam_parents.TC.index.csv", replacement="_summary.csv", fn_counts), row.names = FALSE)
+  df_counts %>% write.csv(
+    file=fn_counts %>% fn_strip_ext() %>% fn_add_extenstion(extension = "summary", base_from, base_to), 
+    row.names = FALSE
+    )
 
 }
 

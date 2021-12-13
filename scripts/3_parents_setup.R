@@ -39,6 +39,8 @@ families_to_parents <- function(
   if (ncol(df_totals) == 2) {df_totals$`child_1` <- c(NA)}
   if (ncol(df_totals) == 3) {df_totals$`child_2` <- c(NA)}
   if (ncol(df_totals) == 4) {df_totals$`child_3` <- c(NA)}
+  if (ncol(df_totals) == 5) {df_totals$`child_4` <- c(NA)}
+  if (ncol(df_totals) == 6) {df_totals$`child_5` <- c(NA)}
   df_totals[is.na(df_totals)] <- 0
   
   # calculate thetas
@@ -63,6 +65,10 @@ families_to_parents <- function(
 
   df_index %>% rowwise() %>% mutate(
     family_total = sum(child_0, child_1, child_2, child_3),
+    #### EDIT HERE
+    family_total = sum(contains(child_)),
+    family_n_conversions = sum(child_1*1, child_2*2, child_3*3, child_4*4, child_5*5),
+    #####
     family_cpm = (family_total/reads)*1000000
   ) -> df_index
 
