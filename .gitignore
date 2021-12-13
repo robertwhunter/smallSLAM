@@ -40,5 +40,5 @@ vignettes/*.pdf
 .Rproj.user
 
 # My notes
-RWH_private_notes.txt
+README_private.md
 smallSLAM.pptx

@@ -2,8 +2,8 @@
 
 #$ -N smallSLAM
 #$ -wd <insert wd>
-#$ -e <insert wd>/Logs
-#$ -o <insert wd>/Logs
+#$ -e <insert wd>/Logs/
+#$ -o <insert wd>/Logs/
 #$ -l h_rt=02:00:00
 #$ -l h_vmem=8G
 #$ -pe sharedmem 4
@@ -170,7 +170,7 @@ mv Parents/*dummy* Mapping
 #
 #
 
-source $set_conda_dir/miniconda3/bin/activate env_MAP
+source $set_conda_dir/bin/activate env_MAP
 
 # BOWTIE OPTIONS
 #

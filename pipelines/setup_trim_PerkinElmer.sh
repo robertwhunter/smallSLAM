@@ -2,8 +2,8 @@
 
 #$ -N trim_PerkinElmer
 #$ -wd <insert wd>
-#$ -e <insert wd>/Logs
-#$ -o <insert wd>/Logs
+#$ -e <insert wd>/Logs/
+#$ -o <insert wd>/Logs/
 #$ -l h_rt=02:00:00
 #$ -l h_vmem=8G
 #$ -pe sharedmem 4
@@ -87,7 +87,7 @@ fi
 t="$(date)" 
 echo "...starting trimming at $t..."
 
-source $set_conda_dir/miniconda3/bin/activate env_CUTADAPT
+source $set_conda_dir/bin/activate env_CUTADAPT
 
 
 #### Trim with cutadapt
