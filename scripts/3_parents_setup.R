@@ -66,8 +66,8 @@ families_to_parents <- function(
   df_index %>% rowwise() %>% mutate(
     family_total = sum(child_0, child_1, child_2, child_3),
     #### EDIT HERE
-    family_total = sum(contains(child_)),
-    family_n_conversions = sum(child_1*1, child_2*2, child_3*3, child_4*4, child_5*5),
+#    family_total = sum(contains(child_)),
+#    family_n_conversions = sum(child_1*1, child_2*2, child_3*3, child_4*4, child_5*5),
     #####
     family_cpm = (family_total/reads)*1000000
   ) -> df_index

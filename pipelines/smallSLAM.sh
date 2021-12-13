@@ -104,7 +104,7 @@ echo "...starting module 2 at $t..."
 parallel "Rscript /home/rhunter3/smallSLAM_scripts/2_families.R {} $set_threshold_parent" ::: Unique/*.uniq
 
 mkdir Families
-mv Unique/*_slam_families*.csv Families
+mv Unique/*families*.csv Families
 
 fi
 
@@ -115,10 +115,10 @@ then
 
 t="$(date)"
 echo "...starting module 3 at $t..."
-parallel "Rscript /home/rhunter3/smallSLAM_scripts/3_parents.R {}" ::: Families/*_slam_families*.csv
+parallel "Rscript /home/rhunter3/smallSLAM_scripts/3_parents.R {}" ::: Families/*families*.csv
 
 mkdir Parents
-mv Families/*_slam_parents* Parents
+mv Families/*parents* Parents
 
 fi
 

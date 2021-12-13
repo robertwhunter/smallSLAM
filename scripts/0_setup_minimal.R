@@ -8,8 +8,8 @@ fn_add_ext <- function(
   base_to = "C"
 ) {
   fn_out <- case_when(
-    extension == "families" ~ paste0(fn_base, "_slam_families", base_from, base_to, ".csv"),
-    extension == "parents" ~ paste0(fn_base, "_slam_parents", base_from, base_to, ".index.csv"),
+    extension == "families" ~ paste0(fn_base, "_families_", base_from, base_to, ".csv"),
+    extension == "parents" ~ paste0(fn_base, "_parents_", base_from, base_to, ".index.csv"),
     extension == "summary" ~ paste0(fn_base, "_summary_", base_from, base_to, ".csv")
   )
   fn_out %>% return()
@@ -18,7 +18,7 @@ fn_add_ext <- function(
 fn_strip_ext <- function(
   fn_full
 ) {
-  fn_root <- sub("\\.fastq.trim.uniq_slam_*.*", "", fn_full)
+  fn_root <- sub("\\.fastq.trim.uniq*.*", "", fn_full)
   fn_root %>% return()
 }
 
