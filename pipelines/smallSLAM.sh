@@ -34,11 +34,11 @@
 set_threshold_parent=100
 set_genomes_dir=$DIR_genome    # no trailing slash
 set_conda_dir=$DIR_miniconda   # no trailing slash
-mod1=0
-mod2=0
-mod3=0
-mod4=0
-mod5=0
+mod1=0 # unique reads
+mod2=0 # families
+mod3=0 # parents 
+mod4=0 # map 
+mod5=0 # summarise
 
 
 #### Initialise the environment modules
@@ -231,8 +231,6 @@ cp Mapping/*all_biotypes.tsv Summary/
 cp Parents/*index.csv Summary/
 
 parallel "Rscript /home/rhunter3/smallSLAM_scripts/5_summary.R {}" ::: Summary/*index.csv
-
-Rscript /home/rhunter3/smallSLAM_scripts/6_unify.R Summary/
 
 fi
 
