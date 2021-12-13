@@ -48,6 +48,8 @@ merge_mapping <- function(
   # merge mapping and count data
   df_map <- df_map %>% select(sequence, biotype, gene)
   df_counts <- left_join(df_counts, df_map, by = c("sequence"))
+  
+  df_counts <- df_counts %>% collapse_to_genes()
 
   df_counts %>% write.csv(
     file=fn_counts %>% fn_strip_ext() %>% fn_add_ext(extension = "summary"), 
@@ -56,3 +58,25 @@ merge_mapping <- function(
 
 }
 
+
+## function to collapse parent reads mapping to same gene 
+collapse_to_genes <- function(df) {
+  
+  df %>% 
+    # first ensure genes not mapped or mapped to genome don't have duplicate names
+    mutate(gene = if_else(biotype %in% c("genome", "unmapped"), 
+                          paste0(gene, "_", sequence),
+                          gene)) %>% 
+    
+    # then collapse data to single genes
+    mutate(theta_weight = theta*family_total) %>% 
+    group_by(gene) %>% 
+    summarise(
+      biotype = biotype[1],
+      n_parents = length(sequence),
+      reads = sum(family_total),
+      cpm = sum(family_cpm) %>% round(),
+      cR = sum(n_conversions) / sum(total_T),
+      wtheta = mean(theta_weight / reads)
+    ) %>% return()
+}
