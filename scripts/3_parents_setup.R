@@ -23,6 +23,9 @@ families_to_parents <- function(
   # filter out SNPs
   df_families <- df_families %>% filter(child_order == 0 | prop_parent < SNP_threshold)
   
+  # get overall conversion rates
+  df_families <- df_families %>% get_conversion_rates()
+  
   # get summary totals
   df_families %>% group_by(family, child_order) %>% summarise(
     total = sum(count)
@@ -39,8 +42,6 @@ families_to_parents <- function(
   if (ncol(df_totals) == 2) {df_totals$`child_1` <- c(NA)}
   if (ncol(df_totals) == 3) {df_totals$`child_2` <- c(NA)}
   if (ncol(df_totals) == 4) {df_totals$`child_3` <- c(NA)}
-  if (ncol(df_totals) == 5) {df_totals$`child_4` <- c(NA)}
-  if (ncol(df_totals) == 6) {df_totals$`child_5` <- c(NA)}
   df_totals[is.na(df_totals)] <- 0
   
   # calculate thetas
@@ -59,27 +60,37 @@ families_to_parents <- function(
   # reconcile with sequence to generate df_index 
   df_families %>% 
     filter(child_order == 0) %>% 
-    select(family, sequence, reads) -> df_index
+    select(family, sequence, reads, n_conversions) -> df_index
   
   df_index <- left_join(df_index, df_totals, by = c("family"))
 
   df_index %>% rowwise() %>% mutate(
-    family_total = sum(child_0, child_1, child_2, child_3),
-    #### EDIT HERE
-#    family_total = sum(contains(child_)),
-#    family_n_conversions = sum(child_1*1, child_2*2, child_3*3, child_4*4, child_5*5),
-    #####
+    family_total = sum(c_across(contains("child_"))),
+    total_base_from = family_total*parent_n_base_from,
+    conversion_rate = n_conversions / total_base_from,
     family_cpm = (family_total/reads)*1000000
   ) -> df_index
 
   df_index <- df_index %>% select(-reads)
+  
+  df_index %>% select(
+    family,
+    sequence,
+    contains("child_"),
+    family_total,
+    family_cpm,
+    parent_n_base_from,
+    total_base_from,
+    n_conversions,
+    conversion_rate,
+    theta
+  ) -> df_index
 
   colnames(df_index)[which(names(df_index) == "child_0")] <- "parent"
   colnames(df_index)[which(names(df_index) == "parent_n_base_from")] <- paste0("parent_n_", base_from)
-
+  colnames(df_index)[which(names(df_index) == "total_base_from")] <- paste0("total_", base_from)
   
-  # write out
-
+  #write out
   df_index %>% write.table(
     file = fn_families %>% fn_strip_ext() %>% fn_add_ext(extension = "parents", base_from, base_to),
     row.names = FALSE,
@@ -87,7 +98,7 @@ families_to_parents <- function(
     sep = ",",
     quote = FALSE
   )
-
+  
 }
 
 # sub-function to estimate theta by maximum liklihood estimation, MLE (using calculus)
@@ -105,4 +116,12 @@ theta_by_MLE_calc <- function(
   theta %>% return()
 }
 
+# sub-function to get conversion rates simply by counting
+get_conversion_rates <- function(df_in) {
+  df_in %>% 
+    mutate(n_conversions = child_order * count) %>% 
+    group_by(family) %>% 
+      summarise(n_conversions = sum(n_conversions)) -> df_conversions
+  df_in %>% left_join(df_conversions) %>% return()
+}
 

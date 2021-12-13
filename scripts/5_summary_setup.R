@@ -50,7 +50,7 @@ merge_mapping <- function(
   df_counts <- left_join(df_counts, df_map, by = c("sequence"))
 
   df_counts %>% write.csv(
-    file=fn_counts %>% fn_strip_ext() %>% fn_add_extenstion(extension = "summary", base_from, base_to), 
+    file=fn_counts %>% fn_strip_ext() %>% fn_add_ext(extension = "summary"), 
     row.names = FALSE
     )
 
