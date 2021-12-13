@@ -91,7 +91,7 @@ unique_to_families <- function(
   df_out$reads <- c(total_reads)
   
   df_out %>% write.table(
-    file = fn_unique %>% fn_strip_ext() %>% fn_add_ext(extension = "uniq_TC", base_from, base_to),
+    file = fn_unique %>% fn_strip_ext() %>% fn_add_ext(extension = "families_TC", base_from, base_to),
     row.names = FALSE,
     col.names = TRUE,
     sep = ",",

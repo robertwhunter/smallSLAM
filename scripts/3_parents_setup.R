@@ -75,7 +75,7 @@ families_to_parents <- function(
   # write out
 
   df_index %>% write.table(
-    file = fn_families %>% fn_strip_ext() %>% fn_add_ext(extension = "parents_TC_index", base_from, base_to),
+    file = fn_families %>% fn_strip_ext() %>% fn_add_ext(extension = "parents_index", base_from, base_to),
     row.names = FALSE,
     col.names = TRUE,
     sep = ",",

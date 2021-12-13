@@ -16,7 +16,7 @@ awk 'NR%4==2' $1 | sort | uniq -c | sort -nr | cat -n > ${1%.*}.uniq
 
 echo "rank,count,sequence" > $1.tmp
 
-awk '{$2=$2};1' $1.uniq | sed 's/ /,/g' >> $1.tmp
+awk '{$2=$2};1' ${1%.*}.uniq | sed 's/ /,/g' >> $1.tmp
 mv $1.tmp ${1%.*}.uniq
 
 # awk '{$2=$2};1' to collapse multiple spaces into a single space
