@@ -49,7 +49,7 @@ merge_mapping <- function(
   df_map <- df_map %>% select(sequence, biotype, gene)
   df_counts <- left_join(df_counts, df_map, by = c("sequence"))
   
-  df_counts <- df_counts %>% collapse_to_genes()
+  df_counts <- df_counts %>% collapse_to_genes() %>% arrange(-cpm)
 
   df_counts %>% write.csv(
     file=fn_counts %>% fn_strip_ext() %>% fn_add_ext(extension = "summary"), 
