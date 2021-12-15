@@ -107,6 +107,13 @@ QC_json_fn %>%
 ```
 
 The binwidth of 2 is an artefact of fastQC.  
+
+<!--
+Can probably do this manually using:
+cat input.fq | awk '{if(NR%4==2) print length($1)}' > readlengths.txt
+sort readlengths.txt | uniq -c
+-->
+
 <br>
 <br>
 

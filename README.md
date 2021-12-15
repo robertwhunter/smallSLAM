@@ -30,11 +30,15 @@ Need to set up a directory with reference genomes.  To do this: in .fasta format
 2) generate Bowtie index files (.bt2) (use `setup_indexgenomes.sh` script) 
 3) generate a lookup table (`Lookup_table.tsv`) so that gene names can be translated into intuitive ones (use `setup_makelookup.sh` script)
 
-Ensure correct adapter sequences being used for the script.  
-
 
 ### Input data
-Input data in .fastq format.  
+Input data in .fastq format.  First ensure reads are trimmed (e.g. using `trim_TriLink.sh` or `trim_PerkinElmer.sh` - and ensure correct adapter sequences being used for these scripts).  Then run the `smallSLAM.sh` pipeline.  
 
 
-### Meta-data
+### Analysis .Rmd
+
+After running the smallSLAM pipeline, run `6_analysis.Rmd`.  This requires an input metadata .csv which should contain the following columns:  
+
+- `library`: library or sample name  
+- `group`: experimental group  
+- plus any additional columns (often Cre, UPRT and 4TU, sample type etc.)
