@@ -10,7 +10,7 @@ fn_add_ext <- function(
   fn_out <- case_when(
     extension == "families" ~ paste0(fn_base, "_slam_families_", base_from, base_to, ".csv"),
     extension == "parents" ~ paste0(fn_base, "_slam_parents_", base_from, base_to, ".index.csv"),
-    extension == "summary" ~ paste0(fn_base, "_summary.csv")
+    extension == "summary" ~ paste0(fn_base, "_scount.csv")
   )
   fn_out %>% return()
 }

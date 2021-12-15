@@ -34,3 +34,6 @@ Ensure correct adapter sequences being used for the script.
 
 ### Input data
 Input data in .fastq format.  
+
+
+### Meta-data

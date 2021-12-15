@@ -3,6 +3,12 @@
 
 # NB this takes a very long time to run - is quicker to simply download .fasta files manually from RNAcentral
 
+args = commandArgs(trailingOnly = TRUE)
+set_dummy_run <- FALSE
+
+
+#### load libraries ----
+
 library(httr)
 library(jsonlite)
 library(tidyverse)
@@ -93,7 +99,7 @@ pull_fasta <- function(taxonomy, biotype, database, fn_output, dummy_run = FALSE
     JSON_r <- RNA_central_pull$content %>% rawToChar() %>% fromJSON()
     paste0(
       ">", JSON_r$rnacentral_id, " ", JSON_r$description, "\n", 
-      JSON_r$sequence, "\n") %>% 
+      gsub("U", "T", JSON_r$sequence), "\n") %>% 
       write_file(path = paste0(fn_output, ".fa"), append = TRUE)
   }
 }
@@ -101,20 +107,13 @@ pull_fasta <- function(taxonomy, biotype, database, fn_output, dummy_run = FALSE
 
 #### get data ----
 
-# may need to first setwd
-
-# read in index
-df_index <- read_csv("RNA_biotypes_source.csv") %>% filter(source == "RNAcentral")
-
-
 # get all data
 
-for (r in 1:nrow(df_index)) {
-
-  taxonomy <- df_index[r,]$TAXONOMY
-  database <- df_index[r,]$expert_db
-  fn_output <- df_index[r,]$string
-  biotype <- df_index[r,]$rna_type
+df_index <- read_csv(args[1])
   
-  pull_fasta(taxonomy, biotype, database, fn_output, dummy_run = TRUE)
-}
+taxonomy <- df_index[1,]$TAXONOMY
+database <- df_index[1,]$expert_db
+fn_output <- df_index[1,]$string
+biotype <- df_index[1,]$rna_type
+  
+pull_fasta(taxonomy, biotype, database, fn_output, set_dummy_run)

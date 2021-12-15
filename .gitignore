@@ -19,6 +19,7 @@
 
 # RStudio files
 .Rproj.user/
+.Rprofile
 
 # produced vignettes
 vignettes/*.html
@@ -43,3 +44,5 @@ vignettes/*.pdf
 README_private.md
 smallSLAM.pptx
 troubleshooting.R
+prep_script.bash
+analysis/

@@ -1,11 +1,11 @@
 #!/bin/sh
 
-#$ -N trim_PerkinElmer
+#$ -N <insert job name>_trim
 #$ -wd <insert wd>
 #$ -e <insert wd>/Logs/
 #$ -o <insert wd>/Logs/
 #$ -l h_rt=02:00:00
-#$ -l h_vmem=8G
+#$ -l h_vmem=16G
 #$ -pe sharedmem 4
 #$ -m bea -M <insert email>
 #$ -V
@@ -26,7 +26,7 @@
 ##
 
 set_paired=0
-set_dummyrun=1
+set_dummyrun=0
 set_dummysize=1000000
 set_ADAP_FOR="TGGAATTCTCGGGTGCCAAGG"
 set_ADAP_REV="GTTCAGAGTTCTACAGTCCGACGATC"
