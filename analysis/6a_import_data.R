@@ -20,6 +20,6 @@ fn_scounts %>%
 
 here(dir_meta, "metadata.csv") %>% 
   read_csv() %>% 
-  filter(tube_label %in% df_scounts$library) -> df_meta
+  filter(library %in% df_scounts$library) -> df_meta
 
 source(here("analysis", "6d_meta_names_repair.R"))
