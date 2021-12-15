@@ -37,8 +37,10 @@ Input data in .fastq format.  First ensure reads are trimmed (e.g. using `trim_T
 
 ### Analysis .Rmd
 
-After running the smallSLAM pipeline, run `6_analysis.Rmd`.  This requires an input metadata .csv which should contain the following columns:  
+After running the smallSLAM pipeline, run `6_analysis.Rmd`.  This requires an input `metadata.csv` which should contain the following columns:  
 
-- `library`: library or sample name  
+- `library`: library name  
 - `group`: experimental group  
 - plus any additional columns (often Cre, UPRT and 4TU, sample type etc.)
+
+This .csv file should be put in an `input` directory within the main data directory.  
