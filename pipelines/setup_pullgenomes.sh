@@ -9,8 +9,6 @@
 #$ -l h_rt=12:00:00 
 #$ -l h_vmem=2G     
 #$ -pe sharedmem 4  
-#$ -l h_rt=08:00:00
-#$ -l h_vmem=16G
 #$ -m bea -M <insert email>
 #$ -V
 
@@ -25,7 +23,7 @@ module load R
 ## small RNA
 Rscript /home/rhunter3/smallSLAM_scripts/0a_pull_smallRNA_setup.R
 parallel "Rscript /home/rhunter3/smallSLAM_scripts/0b_pull_smallRNA_fasta.R {}" ::: *_split_*.csv
-rm *_split_*.csv
+rm *_split_*
 
 ## pc transcripts and genome
 curl -s "ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M27/gencode.vM27.pc_transcripts.fa.gz" | gunzip > pc_transcripts.fa

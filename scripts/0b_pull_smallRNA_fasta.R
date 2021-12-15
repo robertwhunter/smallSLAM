@@ -94,6 +94,7 @@ pull_fasta <- function(taxonomy, biotype, database, fn_output, dummy_run = FALSE
   # then pull data - this takes a long time
   stem <- "https://www.rnacentral.org/api/v1/rna/"
   
+  # NB necessary to translate Us to Ts so that reads can then be mapped correctly
   for (r in 1:nrow(EBI_pull_df)) {
     RNA_central_pull <- GET(paste0(stem, EBI_pull_df$id[r]))
     JSON_r <- RNA_central_pull$content %>% rawToChar() %>% fromJSON()

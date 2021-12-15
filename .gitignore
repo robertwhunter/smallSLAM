@@ -45,4 +45,5 @@ README_private.md
 smallSLAM.pptx
 troubleshooting.R
 prep_script.bash
-analysis/
+analysis/*.html
+analysis/Figures

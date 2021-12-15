@@ -1,0 +1,123 @@
+---
+params:
+  fname: "Test analysis2"
+
+title: "`r paste0('smallSLAM analysis - ', params$fname)`"
+author: "RWH"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+
+output: 
+  html_document:
+    theme: readable 
+    highlight: pygments 
+    anchor_sections: FALSE
+  
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE, 
+  warning = FALSE, 
+  error = TRUE, 
+  message = FALSE,
+  fig.path = paste0("Figures/", params$fname, "/")
+  )
+
+#### LOAD LIB DATA & ANALYSIS SCRIPTS
+library(tidyverse)
+library(here)
+library(jsonlite)
+
+source(here(".Rprofile"))
+source(here("analysis", "6a_plot_themes.R"))
+source(here("analysis", "6b_plotting_functions.R"))
+
+```
+
+```{r import_data, include=FALSE}
+
+#### SET PATHS ----
+# dir_data and dir_meta defined in .Rprofile file
+dir_QC <- here(dir_data, "Trim_multiqc", "Trim_multiqc_data")
+dir_scounts <- here(dir_data, "Summary")
+
+
+#### READ IN DATA ----
+QC_json_fn <- list.files(dir_QC, pattern = ".json", full.names = TRUE)
+
+df_QC <- read_delim(here(dir_QC, "multiqc_general_stats.txt"), delim = "\t") 
+colnames(df_QC) <- c("library", "duplicates %", "GC %", "length (mean)", "fails %", "reads")  
+
+#df_QC2 <- read_delim(here(dir_QC, "multiqc_fastqc.txt"), delim = "\t")
+
+fn_scounts <- list.files(dir_scounts, pattern = "_scount.csv", full.names = TRUE) %>% set_names()
+fn_scounts %>% 
+  purrr::map_dfr(read_csv, .id = "library") %>% 
+  mutate(library = word(basename(library))) %>%  
+  mutate(library = gsub("_scount.csv", "", library)) -> df_scounts
+
+here(dir_meta, fn_meta) %>% 
+  read_csv() %>% 
+  filter(tube_label %in% df_scounts$library) -> df_meta
+
+source(here("analysis", "6c_meta_names_repair.R"))
+
+```
+
+
+# Basic data characterisation
+
+## Libraries and metadata  
+
+```{r metadata}
+
+df_meta %>% knitr::kable()
+df_QC %>% knitr::kable()
+
+```
+
+<br>
+<br>
+
+## Library size & read-length distribution
+
+```{r QC_reads}
+QC_json_fn %>% 
+  QCget_readcounts() %>% 
+  QCplot_readcounts(df_meta) + sf_RWH3
+
+```
+
+
+```{r QC_length_hist}
+QC_json_fn %>% 
+  QCget_length_distribution() %>% 
+  QCreshape_length_distribution() %>% 
+  QCplot_length_distribution_hist(df_meta) + sf_RWH3
+
+```
+
+```{r QC_length_hist_trim}
+QC_json_fn %>% 
+  QCget_length_distribution() %>% 
+  QCreshape_length_distribution() %>% 
+  QCplot_length_distribution_hist_trim(df_meta) + sf_RWH3
+
+```
+
+The binwidth of 2 is an artefact of fastQC.  
+<br>
+<br>
+
+
+## Biotypes
+
+```{r biotypes}
+
+df_scounts %>% 
+  left_join(df_meta, by = "library") %>% 
+  plot_biotypes() + sf_RWH2
+
+```
+

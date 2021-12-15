@@ -13,7 +13,7 @@
 #$ -V
 
 
-for a in *.fa; do ~/smallSLAM_scripts/make_lookup.bash $a; done
+for a in *.fa; do ~/smallSLAM_scripts/0c_make_lookup.bash $a; done
 cat *.fa.lookup > Lookup_table.tsv
 sed 's/^.//' Lookup_table.tsv > tmp # to remove > at the start of each line
 mv tmp Lookup_table.tsv 
