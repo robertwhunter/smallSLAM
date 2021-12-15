@@ -10,11 +10,16 @@
 
 
 # Set grid Engine options:
-#$ -N sS_TREFOIL
-#$ -wd /exports/eddie/scratch/rhunter3/smallSLAM_data/<input dir>/
-#$ -l h_rt=00:30:00
-#$ -l h_vmem=8G
-#$ -m bea -M robert.hunter@ed.ac.uk
+#$ -N <insert job name>_TREFOIL0
+#$ -wd <insert wd>
+#$ -e <insert wd>/Logs/
+#$ -o <insert wd>/Logs/
+#$ -l h_rt=08:00:00
+#$ -l h_vmem=16G
+#$ -pe sharedmem 4
+#$ -m bea -M <insert email>
+#$ -V
+
 
 
 

@@ -10,14 +10,15 @@
 
 
 # Set grid Engine options:
-#$ -N sS_TABACO
-#$ -wd /exports/eddie/scratch/rhunter3/smallSLAM_data/INPUT_DIR/
-#$ -o /exports/eddie/scratch/rhunter3/smallSLAM_data/INPUT_DIR/
-#$ -e /exports/eddie/scratch/rhunter3/smallSLAM_data/INPUT_DIR/
-#$ -l h_rt=00:30:00
-#$ -l h_vmem=8G
+#$ -N <insert job name>_TABACO
+#$ -wd <insert wd>
+#$ -e <insert wd>/Logs/
+#$ -o <insert wd>/Logs/
+#$ -l h_rt=08:00:00
+#$ -l h_vmem=16G
 #$ -pe sharedmem 4
-#$ -m bea -M robert.hunter@ed.ac.uk
+#$ -m bea -M <insert email>
+#$ -V
 
 
 
