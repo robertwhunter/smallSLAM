@@ -43,7 +43,6 @@ vignettes/*.pdf
 # My notes
 README_private.md
 smallSLAM.pptx
-troubleshooting.R
 prep_script.bash
 analysis/*.html
 analysis/Figures

@@ -1,6 +1,6 @@
 ---
 params:
-  fname: "Test analysis2"
+  fname: "Test new genomes"
 
 title: "`r paste0('smallSLAM analysis - ', params$fname)`"
 author: "RWH"

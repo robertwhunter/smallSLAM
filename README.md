@@ -37,7 +37,7 @@ Input data in .fastq format.  First ensure reads are trimmed (e.g. using `trim_T
 
 ### Analysis .Rmd
 
-After running the smallSLAM pipeline, run `6_analysis.Rmd`.  This requires an input `metadata.csv` which should contain the following columns:  
+After running the smallSLAM pipeline, run `render_smallSLAM` function.  This requires an input `metadata.csv` which should contain the following columns:  
 
 - `library`: library name  
 - `group`: experimental group  

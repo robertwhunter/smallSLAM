@@ -98,7 +98,7 @@ QCplot_length_distribution <- function(df){
                y = abundance, 
                color = name)) + 
     geom_line() + 
-    xlim(10,50) + 
+    coord_cartesian(xlim = c(10,50)) +
     theme_RWH()
 }
 
@@ -112,7 +112,7 @@ QCplot_length_distribution_hist <- function(df, df_meta){
                y = perc,
                fill = group)) + 
     geom_col(alpha = 0.6) + 
-    xlim(10,50) + 
+    coord_cartesian(xlim = c(10,50)) +
     facet_wrap(~name) +
     theme_RWH_horizontal()
 }

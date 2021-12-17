@@ -1,5 +1,7 @@
 #### SET PATHS ----
-# dir_data and dir_meta defined in .Rprofile file
+
+# dir_data defined in render_smallSLAM
+dir_meta <- paste0(dir_data,"/input")
 dir_QC <- here(dir_data, "Trim_multiqc", "Trim_multiqc_data")
 dir_scounts <- here(dir_data, "Summary")
 
