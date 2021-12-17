@@ -37,10 +37,18 @@ Input data in .fastq format.  First ensure reads are trimmed (e.g. using `trim_T
 
 ### Analysis .Rmd
 
-After running the smallSLAM pipeline, run `render_smallSLAM` function.  This requires an input `metadata.csv` which should contain the following columns:  
+After running the smallSLAM pipeline, run `smallSLAM_render.R` and then call the `render_smallSLAM(fname)` function, where `fname` is the name of the parent data directory.  
+
+This data directory should contain the following subdirectories:  
+
+- `input` - containing a `metadata.csv` and `exp_setup.txt` (freetext description of the experiment)
+- `Trim_multiqc` from smallSLAM pipeline
+- `Summary` from smallSLAM pipeline
+- `output` - empty but will be populated when analysis is rendered
+
+
+The `metadata.csv` should contain the following columns:  
 
 - `library`: library name  
 - `group`: experimental group  
 - plus any additional columns (often Cre, UPRT and 4TU, sample type etc.)
-
-This .csv file should be put in an `input` directory within the main data directory.  

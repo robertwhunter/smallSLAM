@@ -1,6 +1,7 @@
 ---
 params:
-  fname: "Test new genomes"
+  fname: "default"
+  dir_data: "default"
 
 title: "`r paste0('smallSLAM analysis - ', params$fname)`"
 author: "RWH"
@@ -18,10 +19,10 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = FALSE, 
-  warning = FALSE, 
+  warning = TRUE, 
   error = TRUE, 
-  message = FALSE,
-  fig.path = paste0("Figures/", params$fname, "/")
+  message = FALSE
+  # fig.path = paste0(dir_data, "output/") - don't know why this not working
   )
 
 #### LOAD LIB DATA & ANALYSIS SCRIPTS
@@ -36,7 +37,18 @@ source(here("analysis", "6c_plotting_functions.R"))
 ```
 
 ```{r import_data, include=FALSE}
+
+dir_data <<- params$dir_data  ## <<- to make global variable
 source(here("analysis", "6a_import_data.R"))
+
+```
+
+
+# Overview of experimental design
+
+```{r experimental_description, child=here(dir_data, "input", "exp_setup.txt")}
+
+#here(dir_data, "input", "exp_setup.txt") %>% read_file() %>% print()
 
 ```
 
