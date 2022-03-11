@@ -10,14 +10,9 @@ Existing analysis pipelines are capable of mapping and quantifying T>C conversio
 
 The smallSLAM pipeline has been designed to quantify and map T>C conversions in small RNA SLAMseq datasets.  These require a different approach to T>C quantification (due to a high proportion of duplicated reads and a low number of Ts per read) and a mapping approach that is optimised for small RNA species.  
 
-Our general approach is shown here:
+The general approach is shown here:
 
 ![](smallSLAM.png)
-
-
-## Implementation
-
-We will add additional documentation in late 2021.  
 
 
 ## Set-up
@@ -28,10 +23,11 @@ Need to set up a directory with reference genomes.  To do this: in .fasta format
 
 1) download genome sequences in .fasta format (or use `setup_pullgenomes.sh` script to do this)
 2) generate Bowtie index files (.bt2) (use `setup_indexgenomes.sh` script) 
-3) generate a lookup table (`Lookup_table.tsv`) so that gene names can be translated into intuitive ones (use `setup_makelookup.sh` script)
+3) generate a lookup table (`Lookup_table.tsv`) so that gene names can be translated into intuitive ones (use `setup_makelookup.sh` script)  
 
 
 ### Input data
+
 Input data in .fastq format.  First ensure reads are trimmed (e.g. using `trim_TriLink.sh` or `trim_PerkinElmer.sh` - and ensure correct adapter sequences being used for these scripts).  Then run the `smallSLAM.sh` pipeline.  
 
 
