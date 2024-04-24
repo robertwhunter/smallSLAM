@@ -29,7 +29,9 @@ set_paired=0
 set_dummyrun=0
 set_dummysize=1000000
 set_ADAP_FOR="TGGAATTCTCGGGTGCCAAGG"
+        # NNNNTGGAATTCTCGGGTGCCAAGG
 set_ADAP_REV="GTTCAGAGTTCTACAGTCCGACGATC"
+            # GUUCAGAGUUCUACAGUCCGACGAUCNNNN
 set_conda_dir=$DIR_miniconda  # no trailing slash
 
 

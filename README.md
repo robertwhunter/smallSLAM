@@ -14,37 +14,43 @@ The general approach is shown here:
 
 ![](smallSLAM.png)
 
+<br>
+<br>
 
 ## Set-up
 
 ### Genome data
 
-Need to set up a directory with reference genomes.  To do this: in .fasta format.  These then need to be:  
+To set up a directory with reference genomes: 
 
-1) download genome sequences in .fasta format (or use `setup_pullgenomes.sh` script to do this)
+1) download genome sequences in .fasta format (or use `setup_pullgenomes.sh` script and `RNA_biotypes_source.csv` to do this) 
 2) generate Bowtie index files (.bt2) (use `setup_indexgenomes.sh` script) 
 3) generate a lookup table (`Lookup_table.tsv`) so that gene names can be translated into intuitive ones (use `setup_makelookup.sh` script)  
 
+<br>
+<br>
 
 ### Input data
 
-Input data in .fastq format.  First ensure reads are trimmed (e.g. using `trim_TriLink.sh` or `trim_PerkinElmer.sh` - and ensure correct adapter sequences being used for these scripts).  Then run the `smallSLAM.sh` pipeline.  
+Input data in .fastq format.  Trim reads (e.g. using `trim_TriLink.sh` or `trim_PerkinElmer.sh` - and ensure correct adapter sequences being used for these scripts).  Then run the `smallSLAM.sh` pipeline.  
 
+<br>
+<br>
 
 ### Analysis .Rmd
 
 After running the smallSLAM pipeline, run `smallSLAM_render.R` and then call the `render_smallSLAM(fname)` function, where `fname` is the name of the parent data directory.  
 
-This data directory should contain the following subdirectories:  
+This data directory should contain the following sub-directories:  
 
-- `input` - containing a `metadata.csv` and `exp_setup.txt` (freetext description of the experiment)
-- `Trim_multiqc` from smallSLAM pipeline
-- `Summary` from smallSLAM pipeline
-- `output` - empty but will be populated when analysis is rendered
+- `input` - containing a `metadata.csv` and `exp_setup.txt` (freetext description of the experiment)  
+- `Trim_multiqc` from smallSLAM pipeline  
+- `Summary` from smallSLAM pipeline  
+- `output` - empty but will be populated when analysis is rendered  
 
 
 The `metadata.csv` should contain the following columns:  
 
 - `library`: library name  
 - `group`: experimental group  
-- plus any additional columns (often Cre, UPRT and 4TU, sample type etc.)
+- plus any additional columns (often Cre, UPRT and 4TU, sample type etc.)  
